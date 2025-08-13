@@ -1,0 +1,59 @@
+version: '3.8'
+
+
+services:
+  web:
+    build: .
+    image: grphql
+    container_name: grphql_con
+    restart: always
+    command: "sh -c '
+    python manage.py makemigrations && 
+    python manage.py migrate && 
+    python manage.py runserver 0.0.0.0:8012'"
+    ports:
+      - '8012:8012'
+#    depends_on:
+#      - db
+#
+#  db:
+#    image: postgres:alpine
+#    container_name: pg6
+#    restart: always
+#    ports:
+#      - '5437:5432'
+#    environment:
+#      POSTGRES_PASSWORD: 1
+#    volumes:
+#      - pg_data:/var/lib/postgresql/data
+
+  celery:
+    build: .
+    image: grphql_celery
+    container_name: grphqll_celery_con
+    command: [ "celery", "-A", "root", "worker", "--loglevel=info" ]
+    depends_on:
+      - rabbit
+
+  rabbit:
+    image: rabbitmq:alpine
+    container_name: rb2
+    ports:
+      - "5673:5672"
+      - "15674:15672"
+    volumes:
+      - rb_data:/var/lib/rabbitmq
+
+  rd:
+    image: redis:alpine
+    container_name: rd4
+    ports:
+      - "6385:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  pg_data:
+  rb_data:
+  redis_data:
+
